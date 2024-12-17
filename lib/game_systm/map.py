@@ -1,6 +1,7 @@
 from lib.game_systm import config
 import numpy as np
 import random
+from database import mycursor,mydb
 
 level = config.configuration()
 
@@ -31,8 +32,18 @@ def savemap(tableau, bombes):
             if (x, y) in bombes:
                 result += "9"  
             else:
-                result += "0"  
+                result += "0" 
+                
+    global mycursor
+    string1 = " INSERT INTO save (save_map) VALUES ("
+    string1 += result 
+    string1 += ")"
+
+    mycursor.execute("INSERT INTO save (save_map) VALUES ('skibidi') ")  
+    global mydb
+    mydb.commit() 
     return result
+    
     
 def indicator(y, x, bombes):
 
@@ -96,6 +107,7 @@ def main():
     tableau, bombes = generatemap()
     carte_str = savemap(tableau, bombes)
     print(carte_str)
+    savemap(tableau, bombes)
     if tableau is None or bombes is None:
         print("Erreur : le jeu ne peut pas démarrer.")
         return
