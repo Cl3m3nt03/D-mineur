@@ -23,7 +23,17 @@ def generatemap():
     else:
         print("Erreur : le niveau n'a pas été correctement défini.")
         return None, None
-
+    
+def savemap(tableau, bombes):
+    result = ""  
+    for y in range(tableau.shape[0]):  
+        for x in range(tableau.shape[1]):  
+            if (x, y) in bombes:
+                result += "9"  
+            else:
+                result += "0"  
+    return result
+    
 def indicator(y, x, bombes):
 
     directions = [
@@ -84,6 +94,8 @@ def deplacementplayer(carte_joueur, bombes):
 
 def main():
     tableau, bombes = generatemap()
+    carte_str = savemap(tableau, bombes)
+    print(carte_str)
     if tableau is None or bombes is None:
         print("Erreur : le jeu ne peut pas démarrer.")
         return
