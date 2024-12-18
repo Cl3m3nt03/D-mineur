@@ -69,6 +69,7 @@ class Tableau:
         self.flags_left = self.bomb
         self.start_time = None
         self.timer = "00:00"
+        self.final = "0000"
         self.game_over = False
         self.victory = False
         self.bombs_revealed = False
@@ -238,9 +239,11 @@ def savemap( tableau_resolve):
     string1 += result 
     string1 += ")"
 
-    mycursor.execute("INSERT INTO save (save_map) VALUES ("+result+") ")
+    mycursor.execute("INSERT INTO save (save_map, time) VALUES ("+result+","+game.final+") ")
+
     global mydb
     mydb.commit() 
+    pygame.time.wait(100)
     return result
 
 def loadmap():
@@ -313,6 +316,7 @@ while running:
         elapsed_time = (pygame.time.get_ticks() - game.start_time) // 1000
         minutes = elapsed_time // 60
         seconds = elapsed_time % 60
+        game.final = f"{minutes:02}{seconds:02}"
         game.timer = f"{minutes:02}:{seconds:02}"
 
     if not game.game_over and not game.victory:
