@@ -2,6 +2,8 @@ import pygame
 import random
 import sys
 from database import mycursor, mydb
+from saves import get_pseudo_and_saves
+from scoreboard import display_leaderboard
 
 # Pygame Configuration
 pygame.init()
@@ -75,6 +77,7 @@ class Tableau:
         self.bombs_revealed = False
         self.first_click = False
         self.first_click_pos = None
+
 
     def reset_bomb_placement(self, first_click_x, first_click_y):
         """Placer les bombes en évitant la zone autour du premier clic."""
@@ -172,36 +175,36 @@ class Tableau:
         return save_rect
 
 def draw_difficulty_buttons(tableau_resolve):
-    replay_button = pygame.Rect(50, 120, 100, 50)
+    score_button = pygame.Rect(50, 120, 100, 50)
     easy_button = pygame.Rect(50, 190, 100, 50)
     medium_button = pygame.Rect(50, 260, 100, 50)
     hard_button = pygame.Rect(50, 330, 100, 50)
     debug_button = pygame.Rect(50, 400, 100, 50)
-
-    pygame.draw.rect(screen, YELLOW, replay_button)
+    
+    pygame.draw.rect(screen, YELLOW, score_button)
     pygame.draw.rect(screen, YELLOW, easy_button)
     pygame.draw.rect(screen, YELLOW, medium_button)
     pygame.draw.rect(screen, YELLOW, hard_button)
     pygame.draw.rect(screen, YELLOW, debug_button)
     
-    replay_text = font.render("Rejouer", True, BLACK)
+    score_text = font.render("Score", True, BLACK)
     easy_text = font.render("Facile", True, BLACK)
     medium_text = font.render("Moyen", True, BLACK)
     hard_text = font.render("Difficile", True, BLACK)
     debug_text = font.render("debug", True, BLACK)
-
-    screen.blit(replay_text, (replay_button.centerx - replay_text.get_width() // 2, replay_button.centery - replay_text.get_height() // 2))
+    
+    screen.blit(score_text, (score_button.centerx - score_text.get_width() // 2, score_button.centery - score_text.get_height() // 2))
     screen.blit(easy_text, (easy_button.centerx - easy_text.get_width() // 2, easy_button.centery - easy_text.get_height() // 2))
     screen.blit(medium_text, (medium_button.centerx - medium_text.get_width() // 2, medium_button.centery - medium_text.get_height() // 2))
     screen.blit(hard_text, (hard_button.centerx - hard_text.get_width() // 2, hard_button.centery - hard_text.get_height() // 2))
     screen.blit(debug_text, (debug_button.centerx - debug_text.get_width() // 2, debug_button.centery - debug_text.get_height() // 2))
 
-    return easy_button, medium_button, hard_button, debug_button, replay_button
+    return easy_button, medium_button, hard_button, debug_button, score_button
 
 # Fonction pour gérer les clics sur les boutons de difficulté
 def handle_difficulty_buttons(tableau_resolve):
     global game
-    easy_button, medium_button, hard_button, debug_button,replay_button = draw_difficulty_buttons(tableau_resolve)
+    easy_button, medium_button, hard_button, debug_button,score_button = draw_difficulty_buttons(tableau_resolve)
     mouse_x, mouse_y = pygame.mouse.get_pos()
 
     if pygame.mouse.get_pressed()[0]:
@@ -218,33 +221,11 @@ def handle_difficulty_buttons(tableau_resolve):
         elif debug_button.collidepoint(mouse_x, mouse_y):
             set_difficulty("0")
             game.reset()
-        elif replay_button.collidepoint(mouse_x, mouse_y):
-             loadmap()
-             pygame.time.wait(100)
+        elif score_button.collidepoint(mouse_x, mouse_y):
+            display_leaderboard(screen, font,)  # Appelle la fonction de classement
+            pygame.time.wait(100)
             
-def savemap( tableau_resolve):
-    result = ""
-    
-    for y in range(len(tableau_resolve)):  
-        for x in range(len(tableau_resolve[y])): 
-            if tableau_resolve[y][x] == "B": 
-                result += "9"
-            elif tableau_resolve[y][x] == "x": 
-                result += "0"
-        result += "1"
 
-
-    global mycursor
-    string1 = " INSERT INTO save (save_map) VALUES ("
-    string1 += result 
-    string1 += ")"
-
-    mycursor.execute("INSERT INTO save (save_map, time) VALUES ("+result+","+game.final+") ")
-
-    global mydb
-    mydb.commit() 
-    pygame.time.wait(100)
-    return result
 
 def loadmap():
     global mycursor
@@ -263,6 +244,8 @@ def loadmap():
 
 
     tableau = [['x' for _ in range(level)] for _ in range(level)]
+            
+
 
     ix, iy = 0, 0 
     for char in tableaucrypte:
@@ -320,6 +303,7 @@ while running:
         game.timer = f"{minutes:02}:{seconds:02}"
 
     if not game.game_over and not game.victory:
+        save_one=True
         for i in range(game.h):
             for j in range(game.l):
                 rect = pygame.Rect(
@@ -345,6 +329,8 @@ while running:
     pygame.draw.rect(
         screen, BLACK, (0, screen_height - PANEL_HEIGHT, screen_width, PANEL_HEIGHT)
     )
+    
+
     timer_text = font.render(f"Temps : {game.timer}", True, WHITE)
     flags_text = font.render(f"Drapeaux restants : {game.flags_left}", True, WHITE)
     screen.blit(timer_text, (SCREEN_PADDING + 20, screen_height - PANEL_HEIGHT + 20))
@@ -362,9 +348,7 @@ while running:
         
         save_button_rect = game.draw_save_button(screen, font, screen_width, screen_height)
         if pygame.mouse.get_pressed()[0] and save_button_rect.collidepoint(mouse_x, mouse_y):
-                carte_str = savemap(game.tableau_resolve)
-                print(carte_str)
-                pygame.time.wait(100)
+                pygame.time.wait(1000)
 
     if game.victory:
         victory_text = alert_font.render("You Win!", True, GREEN)
@@ -375,12 +359,12 @@ while running:
         replay_button_rect = game.draw_replay_button(screen, font, screen_width, screen_height)
         if pygame.mouse.get_pressed()[0] and replay_button_rect.collidepoint(mouse_x, mouse_y):
             game.reset()
-        
         save_button_rect = game.draw_save_button(screen, font, screen_width, screen_height)
-        if pygame.mouse.get_pressed()[0] and save_button_rect.collidepoint(mouse_x, mouse_y):
-                carte_str = savemap(game.tableau_resolve)
-                print(carte_str)
-                pygame.time.wait(100)
+        if pygame.mouse.get_pressed()[0] and save_button_rect.collidepoint(mouse_x, mouse_y) and save_one:
+                save_one=False
+                print(save_one)
+                game_final=game.final
+                get_pseudo_and_saves(screen, game.tableau_resolve, game_final)
 
 
     handle_difficulty_buttons(game.tableau_resolve) 
