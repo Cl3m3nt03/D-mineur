@@ -8,7 +8,7 @@ pygame.init()
 # Dimensions et couleurs
 MARGIN = 1  # Marges réduites pour une meilleure densité
 PANEL_HEIGHT = 150
-SCREEN_PADDING = 150
+SCREEN_PADDING = 100
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
@@ -45,7 +45,7 @@ class Tableau:
             self.h = 9
             self.l = 9
             self.bomb = 10
-            self.CELL_SIZE = 25 
+            self.CELL_SIZE = 40
         elif d == 2:
             self.h = 16
             self.l = 16
@@ -139,34 +139,39 @@ class Tableau:
 
         return replay_rect
 
-# Fonction pour dessiner les boutons de difficulté
+#Gestion des boutons de difficulté 
 def draw_difficulty_buttons():
-    easy_button = pygame.Rect(50, 50, 100, 50)
-    medium_button = pygame.Rect(50, 120, 100, 50)
-    hard_button = pygame.Rect(50, 190, 100, 50)
-    debug_button = pygame.Rect(50, 230, 100, 50)
+    replay_button = pygame.Rect(50, 50, 100, 50)
+    easy_button = pygame.Rect(50, 120, 100, 50)
+    medium_button = pygame.Rect(50, 190, 100, 50)
+    hard_button = pygame.Rect(50, 260, 100, 50)
+    debug_button = pygame.Rect(50, 330, 100, 50)
 
+    pygame.draw.rect(screen, YELLOW, replay_button)
     pygame.draw.rect(screen, YELLOW, easy_button)
     pygame.draw.rect(screen, YELLOW, medium_button)
     pygame.draw.rect(screen, YELLOW, hard_button)
     pygame.draw.rect(screen, YELLOW, debug_button)
-
+    
+    replay_text = font.render("Rejouer", True, BLACK)
     easy_text = font.render("Facile", True, BLACK)
     medium_text = font.render("Moyen", True, BLACK)
     hard_text = font.render("Difficile", True, BLACK)
     debug_text = font.render("debug", True, BLACK)
 
+   
+    screen.blit(replay_text, (replay_button.centerx - replay_text.get_width() // 2, replay_button.centery - replay_text.get_height() // 2))
     screen.blit(easy_text, (easy_button.centerx - easy_text.get_width() // 2, easy_button.centery - easy_text.get_height() // 2))
     screen.blit(medium_text, (medium_button.centerx - medium_text.get_width() // 2, medium_button.centery - medium_text.get_height() // 2))
     screen.blit(hard_text, (hard_button.centerx - hard_text.get_width() // 2, hard_button.centery - hard_text.get_height() // 2))
     screen.blit(debug_text, (debug_button.centerx - debug_text.get_width() // 2, debug_button.centery - debug_text.get_height() // 2))
 
-    return easy_button, medium_button, hard_button, debug_button
+    return easy_button, medium_button, hard_button, debug_button, replay_button
 
 # Fonction pour gérer les clics sur les boutons de difficulté
 def handle_difficulty_buttons():
     global game
-    easy_button, medium_button, hard_button, debug_button = draw_difficulty_buttons()
+    easy_button, medium_button, hard_button, debug_button,replay_button = draw_difficulty_buttons()
     mouse_x, mouse_y = pygame.mouse.get_pos()
 
     if pygame.mouse.get_pressed()[0]:
@@ -179,6 +184,8 @@ def handle_difficulty_buttons():
         elif hard_button.collidepoint(mouse_x, mouse_y):
             set_difficulty("3")
             game.reset()
+        elif replay_button.collidepoint(mouse_x, mouse_y):
+            print("replay panel") 
         elif debug_button.collidepoint(mouse_x, mouse_y):
             set_difficulty("0")
             game.reset()
@@ -188,7 +195,13 @@ game = Tableau()
 screen_width = 1200  # Changer la largeur à 500 pixels
 screen_height = game.h * game.CELL_SIZE + PANEL_HEIGHT + SCREEN_PADDING * 2
 screen = pygame.display.set_mode((screen_width, screen_height))
-pygame.display.set_caption("Démineur")
+#Titre
+pygame.display.set_caption("Ines et les 40 bombes")
+#Image de fenetre
+bomb_image = pygame.image.load("assets/bomb.png")
+bomb_image = pygame.transform.scale(bomb_image, (game.CELL_SIZE - MARGIN, game.CELL_SIZE - MARGIN))
+pygame.display.set_icon(bomb_image)
+
 
 font = pygame.font.Font(None, 36)
 alert_font = pygame.font.Font(None, 72)
@@ -203,9 +216,7 @@ top_margin = (screen_height - game.h * game.CELL_SIZE - PANEL_HEIGHT) // 2
 background_image = pygame.image.load("assets/Background.png")
 background_image = pygame.transform.scale(background_image, (screen_width, screen_height))
 
-# Charger l'image de la bombe
-bomb_image = pygame.image.load("assets/bomb.png")
-bomb_image = pygame.transform.scale(bomb_image, (game.CELL_SIZE - MARGIN, game.CELL_SIZE - MARGIN))
+
 
 # Boucle principale
 running = True
@@ -258,9 +269,7 @@ while running:
             if not game.game_over:
                 if not game.start_time:
                     game.start_time = pygame.time.get_ticks()
-
                 x, y = event.pos
-                # Vérifier si le clic est dans la zone de la grille
                 if y < game.h * game.CELL_SIZE + SCREEN_PADDING and x >= left_margin and x < left_margin + game.l * game.CELL_SIZE:
                     col = (x - left_margin) // game.CELL_SIZE
                     row = (y - SCREEN_PADDING) // game.CELL_SIZE
