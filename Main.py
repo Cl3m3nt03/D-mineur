@@ -40,7 +40,7 @@ class Tableau:
             self.h = 16
             self.l = 30
             self.bomb = 99  
-            self.CELL_SIZE = 17 
+            self.CELL_SIZE = 23 
         elif d == 1:
             self.h = 9
             self.l = 9
@@ -50,13 +50,12 @@ class Tableau:
             self.h = 16
             self.l = 16
             self.bomb = 40
-            self.CELL_SIZE = 20 
+            self.CELL_SIZE = 23
         elif d == 0:
             self.h = 4
             self.l = 4
             self.bomb = 1
             self.CELL_SIZE = 25 
-        
         else:
             self.h = 0
             self.l = 0
@@ -197,6 +196,9 @@ alert_font = pygame.font.Font(None, 72)
 # Calculer la marge gauche pour centrer la grille
 left_margin = (screen_width - game.l * game.CELL_SIZE) // 2
 
+# Calculer la marge pour centrer verticalement la grille (en tenant compte du panneau)
+top_margin = (screen_height - game.h * game.CELL_SIZE - PANEL_HEIGHT) // 2
+
 # Charger l'image de fond
 background_image = pygame.image.load("assets/Background.png")
 background_image = pygame.transform.scale(background_image, (screen_width, screen_height))
@@ -221,7 +223,7 @@ while running:
             for j in range(game.l):
                 rect = pygame.Rect(
                     left_margin + j * game.CELL_SIZE,
-                    SCREEN_PADDING + i * game.CELL_SIZE,
+                    top_margin + i * game.CELL_SIZE,  # Utilisez top_margin ici
                     game.CELL_SIZE - MARGIN,
                     game.CELL_SIZE - MARGIN,
                 )
@@ -258,7 +260,8 @@ while running:
                     game.start_time = pygame.time.get_ticks()
 
                 x, y = event.pos
-                if y < game.h * game.CELL_SIZE + SCREEN_PADDING:
+                # Vérifier si le clic est dans la zone de la grille
+                if y < game.h * game.CELL_SIZE + SCREEN_PADDING and x >= left_margin and x < left_margin + game.l * game.CELL_SIZE:
                     col = (x - left_margin) // game.CELL_SIZE
                     row = (y - SCREEN_PADDING) // game.CELL_SIZE
                     if event.button == 1:
