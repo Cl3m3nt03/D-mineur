@@ -2,6 +2,43 @@ import pygame
 import mysql.connector
 import sys
 
+def decrypt():
+    recupdata = "4xv4xv4xv3xBv"
+    tableaucrypte = recupdata  # Pas besoin de [0][0], on utilise directement la chaîne
+    
+    # Calcul de la hauteur (nombre de 'v') et de la largeur (longueur avant le premier 'v')
+    hauteur = tableaucrypte.count('v')
+    largeur = tableaucrypte.find('v')
+    
+    if largeur == -1:
+        raise ValueError("Le tableau crypté est mal formé ou ne contient pas de séparateur 'v'.")
+
+    # Initialisation du tableau comme une liste de listes
+    tableau = [['x' for _ in range(largeur)] for _ in range(hauteur)]
+
+    nbr = ""  # Stocke les nombres rencontrés
+    ix, iy = 0, 0  # Indices pour remplir le tableau
+
+    for char in tableaucrypte:
+        if char.isnumeric():
+            nbr += char  # Construire le nombre
+        elif char == 'v':  # Fin de ligne
+            ix = 0
+            iy += 1
+        else:
+            # Si aucun nombre, c'est une occurrence unique
+            compt = int(nbr) if nbr else 1
+
+            # Remplir les cases du tableau
+            for _ in range(compt):
+                tableau[iy][ix] = char
+                ix += 1
+
+            nbr = ""  # Réinitialiser le nombre
+
+    return tableau
+
+
 def display_leaderboard(screen, font):
 
     # Connexion à la base de données
@@ -21,6 +58,9 @@ def display_leaderboard(screen, font):
 
     scores = get_top_scores_and_saves()
     db.close()
+
+
+
 
     # Couleurs
     WHITE = (255, 255, 255)
@@ -89,6 +129,7 @@ def display_leaderboard(screen, font):
                     if replay_button_rect.collidepoint(event.pos):
                         selected_save_map = saves_map[i]  # Récupère la sauvegarde associée
                         print(selected_save_map)
+                        decrypt()
                         running = False  # Quitte l'écran après sélection
 
     return selected_save_map

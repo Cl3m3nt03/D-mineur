@@ -100,16 +100,29 @@ def get_pseudo_and_saves(screen, tableau_resolve, game_final):
         pygame.display.flip()
 
 # Fonction pour sauvegarder les données dans la base de données
+
 def savemap(tableau_resolve, game_final):
     result = ""
-    
+
     for y in range(len(tableau_resolve)):  
+        compt = 0  
         for x in range(len(tableau_resolve[y])): 
-            if tableau_resolve[y][x] == "B": 
-                result += "9"
-            elif tableau_resolve[y][x] == "x": 
-                result += "0"
-        result += "1"
+            if tableau_resolve[y][x] == 'x':  
+                compt += 1
+            elif tableau_resolve[y][x] == 'B': 
+                if compt > 0:  
+                    result += f"{compt}x" if compt > 1 else "x"
+                    compt = 0  
+                result += "B"  
+
+    
+        if compt > 0:
+            result += f"{compt}x" if compt > 1 else "x"
+
+        result += "v"  
+
+ 
+
 
     # Connexion à la base de données MySQL
     mydb = mysql.connector.connect(
