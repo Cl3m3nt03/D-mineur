@@ -1,7 +1,6 @@
 import pygame
 import mysql.connector
 import sys
-from replay import Tableau, display_custom_tableau
 
 def decrypt(selected_save_map):
     recupdata = selected_save_map  # Exemple d'entrée
@@ -142,9 +141,8 @@ def display_leaderboard(screen, font):
                 # Vérifier si un bouton "Rejouer" est cliqué
                 for i, replay_button_rect in enumerate(replay_buttons):
                     if replay_button_rect.collidepoint(event.pos):
-                        selected_save_map = saves_map[i]  # Récupère la sauvegarde associée
-                        selected_save_map = decrypt(selected_save_map)  # Appel à la fonction decrypt pour récupérer le tableau
+                        selected_save_map = saves_map[i]  
+                        selected_save_map = decrypt(selected_save_map)  
                         display_custom_tableau(selected_save_map)
-                        running = False  # Quitte l'écran après sélection
-
+                        running = False 
     return selected_save_map
