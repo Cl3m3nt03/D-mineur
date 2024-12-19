@@ -84,6 +84,7 @@ def display_leaderboard(screen, font, game):
     WHITE = (255, 255, 255)
     BLACK = (0, 0, 0)
     YELLOW = (255, 255, 0)
+    RED = (255, 0, 0)
 
     # Dimensions
     screen_width, screen_height = screen.get_size()
@@ -95,7 +96,7 @@ def display_leaderboard(screen, font, game):
 
     # Title
     title_font = pygame.font.Font(None, 50)
-    title_text = title_font.render("Classement des Meilleurs Scores", True, YELLOW)
+    title_text = title_font.render("Classement des Meilleurs Scores", True, BLACK)
     title_rect = title_text.get_rect(center=(screen_width // 2, 50))
     screen.blit(title_text, title_rect)
 
@@ -108,9 +109,9 @@ def display_leaderboard(screen, font, game):
         score_text = font.render(f"{i + 1}. {name} - {score}s", True, WHITE)
         screen.blit(score_text, (screen_width // 4, 150 + i * 40))
 
-        replay_button_rect = pygame.Rect(screen_width // 2 + 100, 150 + i * 40, 100, 30)
+        replay_button_rect = pygame.Rect(screen_width // 2 + 100, 150 + i * 40, 150, 30)
         pygame.draw.rect(screen, YELLOW, replay_button_rect)
-        replay_text = font.render("Rejouer", True, BLACK)
+        replay_text = font.render("REJOUER", True, BLACK)
         replay_text_rect = replay_text.get_rect(center=replay_button_rect.center)
         screen.blit(replay_text, replay_text_rect)
 
@@ -120,8 +121,8 @@ def display_leaderboard(screen, font, game):
     # Return button
     button_font = pygame.font.Font(None, 40)
     return_button_rect = pygame.Rect(screen_width // 2 - 100, screen_height - 100, 200, 50)
-    pygame.draw.rect(screen, WHITE, return_button_rect)
-    return_text = button_font.render("Retour", True, BLACK)
+    pygame.draw.rect(screen, YELLOW, return_button_rect)
+    return_text = button_font.render("RETOUR", True, BLACK)
     return_text_rect = return_text.get_rect(center=return_button_rect.center)
     screen.blit(return_text, return_text_rect)
 
