@@ -2,6 +2,7 @@ import pygame
 import mysql.connector
 import sys
 
+
 def decrypt(selected_save_map):
     recupdata = selected_save_map  # Exemple d'entrée
     tableaucrypte = recupdata  # Utilisation directe de la chaîne
@@ -50,12 +51,10 @@ def decrypt(selected_save_map):
 
             nbr = ""  # Réinitialiser le nombre
 
-    # Retourner l'objet Tableau
-    game = Tableau()  # Créez une nouvelle instance de Tableau
-    game.h = hauteur
-    game.l = largeur
-    game.tableau = tableau
-    return game
+ 
+ 
+    
+    return tableau
 
    
 
@@ -142,7 +141,8 @@ def display_leaderboard(screen, font):
                 for i, replay_button_rect in enumerate(replay_buttons):
                     if replay_button_rect.collidepoint(event.pos):
                         selected_save_map = saves_map[i]  
-                        selected_save_map = decrypt(selected_save_map)  
-                        display_custom_tableau(selected_save_map)
+                        selected_save_map = decrypt(selected_save_map) 
+                        for row in selected_save_map:
+                            print(' '.join(row))
                         running = False 
     return selected_save_map
