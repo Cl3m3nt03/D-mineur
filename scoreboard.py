@@ -1,23 +1,38 @@
 import pygame
 import mysql.connector
 import sys
+from replay import Tableau, display_custom_tableau
 
-def decrypt():
-    recupdata = "4xv4xv4xv3xBv"
-    tableaucrypte = recupdata  # Pas besoin de [0][0], on utilise directement la chaîne
+def decrypt(selected_save_map):
+    recupdata = selected_save_map  # Exemple d'entrée
+    tableaucrypte = recupdata  # Utilisation directe de la chaîne
     
-    # Calcul de la hauteur (nombre de 'v') et de la largeur (longueur avant le premier 'v')
+    # Calcul de la hauteur (nombre de 'v' = nombre de lignes)
     hauteur = tableaucrypte.count('v')
-    largeur = tableaucrypte.find('v')
-    
-    if largeur == -1:
-        raise ValueError("Le tableau crypté est mal formé ou ne contient pas de séparateur 'v'.")
 
-    # Initialisation du tableau comme une liste de listes
+    # Calcul de la largeur (en prenant en compte les répétitions avant chaque 'v')
+    largeur = 0
+    i = 0
+    while i < len(tableaucrypte):
+        if tableaucrypte[i].isdigit():  # Si on trouve un chiffre
+            nbr = ""
+            while i < len(tableaucrypte) and tableaucrypte[i].isdigit():
+                nbr += tableaucrypte[i]  # Récupérer tous les chiffres
+                i += 1
+            nbr = int(nbr)  # Convertir en entier
+            if i < len(tableaucrypte) and tableaucrypte[i].isalpha():  # Si le caractère suivant est une lettre
+                largeur += nbr  # Ajouter le nombre de répétitions de ce caractère
+        elif tableaucrypte[i] == 'v':
+            break  # Passer au prochain caractère
+        else:
+            i += 1  # Passer à la lettre suivante
+
+    # Initialisation du tableau avec la largeur calculée et la hauteur
     tableau = [['x' for _ in range(largeur)] for _ in range(hauteur)]
 
-    nbr = ""  # Stocke les nombres rencontrés
+    # Remplissage du tableau
     ix, iy = 0, 0  # Indices pour remplir le tableau
+    nbr = ""  # Stocke les nombres rencontrés
 
     for char in tableaucrypte:
         if char.isnumeric():
@@ -26,21 +41,27 @@ def decrypt():
             ix = 0
             iy += 1
         else:
-            # Si aucun nombre, c'est une occurrence unique
-            compt = int(nbr) if nbr else 1
+            compt = int(nbr) if nbr else 1  # Calculer le nombre d'occurrences du caractère
 
             # Remplir les cases du tableau
             for _ in range(compt):
-                tableau[iy][ix] = char
-                ix += 1
+                if ix < largeur:  # Si on est toujours dans les limites de la ligne (largeur maximale)
+                    tableau[iy][ix] = char
+                    ix += 1
 
             nbr = ""  # Réinitialiser le nombre
 
-    return tableau
+    # Retourner l'objet Tableau
+    game = Tableau()  # Créez une nouvelle instance de Tableau
+    game.h = hauteur
+    game.l = largeur
+    game.tableau = tableau
+    return game
+
+   
 
 
 def display_leaderboard(screen, font):
-
     # Connexion à la base de données
     db = mysql.connector.connect(
         host="localhost",
@@ -52,15 +73,11 @@ def display_leaderboard(screen, font):
 
     # Récupérer les meilleurs scores et leurs sauvegardes associées, triés par temps croissant
     def get_top_scores_and_saves(limit=10):
-        # Tri du temps par ordre croissant (le plus rapide en premier)
         mycursor.execute("SELECT id, time, name, save_map FROM save ORDER BY time ASC LIMIT %s", (limit,))
         return mycursor.fetchall()
 
     scores = get_top_scores_and_saves()
     db.close()
-
-
-
 
     # Couleurs
     WHITE = (255, 255, 255)
@@ -82,16 +99,14 @@ def display_leaderboard(screen, font):
     screen.blit(title_text, title_rect)
 
     # Variables pour gérer les boutons "Rejouer"
-    replay_buttons = []  # Liste des rects pour les boutons "Rejouer"
-    saves_map = []  # Liste des sauvegardes associées
+    replay_buttons = []
+    saves_map = []
 
     # Affichage des scores avec boutons "Rejouer"
     for i, (id_, score, name, save_map) in enumerate(scores):
-        # Afficher le nom et le score
         score_text = font.render(f"{i + 1}. {name} - {score}s", True, WHITE)
         screen.blit(score_text, (screen_width // 4, 150 + i * 40))
 
-        # Ajouter un bouton "Rejouer"
         replay_button_rect = pygame.Rect(screen_width // 2 + 100, 150 + i * 40, 100, 30)
         pygame.draw.rect(screen, YELLOW, replay_button_rect)
         replay_text = font.render("Rejouer", True, BLACK)
@@ -122,14 +137,14 @@ def display_leaderboard(screen, font):
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 # Vérifier si le bouton Retour est cliqué
                 if return_button_rect.collidepoint(event.pos):
-                    running = False  # Quitte l'écran de classement
+                    running = False
 
                 # Vérifier si un bouton "Rejouer" est cliqué
                 for i, replay_button_rect in enumerate(replay_buttons):
                     if replay_button_rect.collidepoint(event.pos):
                         selected_save_map = saves_map[i]  # Récupère la sauvegarde associée
-                        print(selected_save_map)
-                        decrypt()
+                        selected_save_map = decrypt(selected_save_map)  # Appel à la fonction decrypt pour récupérer le tableau
+                        display_custom_tableau(selected_save_map)
                         running = False  # Quitte l'écran après sélection
 
     return selected_save_map

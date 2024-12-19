@@ -55,9 +55,9 @@ class Tableau:
             self.bomb = 40
             self.CELL_SIZE = 23
         elif d == 0:
-            self.h = 4
-            self.l = 4
-            self.bomb = 1
+            self.h = 10
+            self.l = 10
+            self.bomb = 3
             self.CELL_SIZE = 25 
         else:
             self.h = 0
@@ -225,45 +225,6 @@ def handle_difficulty_buttons(tableau_resolve):
             display_leaderboard(screen, font,)  # Appelle la fonction de classement
             pygame.time.wait(100)
             
-
-
-def loadmap():
-    global mycursor
-
-    # Fetch saved map from database
-    mycursor.execute("SELECT save_map FROM save")
-    result_set = mycursor.fetchall()
-
-    if not result_set:
-        print("No saved map found.")
-        return None  
-
-    tableaucrypte = result_set[0][0] 
-    level = int(len(tableaucrypte) ** 0.5) 
-    print(f"Detected grid size: {level}x{level}")
-
-
-    tableau = [['x' for _ in range(level)] for _ in range(level)]
-            
-
-
-    ix, iy = 0, 0 
-    for char in tableaucrypte:
-        if char == "9": 
-            tableau[iy][ix] = "B"
-        elif char == "0":  
-            tableau[iy][ix] = "x"
-        elif char == "1":  
-            iy += 1  
-            ix = -1  
-
-        ix += 1  
-    for row in tableau:
-        print(" ".join(row))
-    return tableau
-
-
-
 
 game = Tableau()
 screen_width = 1200  
