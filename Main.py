@@ -55,10 +55,10 @@ class Tableau:
             self.bomb = 40
             self.CELL_SIZE = 23
         elif d == 0:
-            self.h = 10
-            self.l = 10
-            self.bomb = 3
-            self.CELL_SIZE = 25 
+            self.h = 5
+            self.l = 5
+            self.bomb = 1
+            self.CELL_SIZE = 40
         else:
             self.h = 0
             self.l = 0
@@ -86,6 +86,7 @@ class Tableau:
         self.bombs_revealed = False
         self.first_click = False
         self.first_click_pos = None
+        
 
         # Debugging: Print the tableau to check if it is reset correctly
         print("Tableau reset:")
@@ -141,6 +142,7 @@ class Tableau:
             self.start_time = pygame.time.get_ticks()
         if self.tableau_resolve[pos1][pos2] == "B":
             self.game_over = True
+            self.reveal_bombs()
             return False
         self.reveal(pos1, pos2)
         return True
@@ -183,21 +185,19 @@ class Tableau:
         screen.blit(save_text, save_text_rect)
         return save_rect
 
+    def reveal_bombs(self):
+        """Révèle toutes les bombes dans le tableau."""
+        for i in range(self.h):
+            for j in range(self.l):
+                if self.tableau_resolve[i][j] == "B":
+                    self.tableau[i][j] = "B"
 
-    def draw_save_button(self, screen, font, screen_width, screen_height):
-        save_width = 180
-        save_height = 50
-        save_rect = pygame.Rect(
-            screen_width // 2 - save_width // 2,
-            screen_height // 2 + 90,
-            save_width,
-            save_height,
-        )
-        pygame.draw.rect(screen, YELLOW, save_rect)
-        save_text = font.render("Save", True, BLACK)
-        save_text_rect = save_text.get_rect(center=save_rect.center)
-        screen.blit(save_text, save_text_rect)
-        return save_rect
+# Charger l'image de la bombe
+bomb_image = pygame.image.load("assets/bomb.png")
+
+# Redimensionner l'image de la bombe pour s'adapter à la taille des cellules
+def resize_bomb_image(cell_size):
+    return pygame.transform.scale(bomb_image, (cell_size - MARGIN, cell_size - MARGIN))
 
 def draw_difficulty_buttons():
     score_button = pygame.Rect(50, 120, 100, 50)
@@ -226,6 +226,7 @@ def draw_difficulty_buttons():
 
     return easy_button, medium_button, hard_button, debug_button, score_button
 
+
 def handle_difficulty_buttons(screen, font, game):
     easy_button, medium_button, hard_button, debug_button, score_button = draw_difficulty_buttons()
     mouse_x, mouse_y = pygame.mouse.get_pos()
@@ -243,14 +244,22 @@ def handle_difficulty_buttons(screen, font, game):
         elif debug_button.collidepoint(mouse_x, mouse_y):
             set_difficulty("0")
             game.reset()
-
+    
         elif score_button.collidepoint(mouse_x, mouse_y):
             display_leaderboard(screen, font, game)
             pygame.time.wait(100)
 
-def play_replay(selected_save_map, game, screen, font):
+def play_replay(selected_save_map):
     game.reset(preset_tableau_resolve=selected_save_map)
- 
+    print("Replay button clicked. Tableau reset with saved tableau.")
+    # Mise à jour des dimensions de l'écran et des marges après le reset
+    global screen_width, screen_height, left_margin, top_margin
+    screen_width = 1200  
+    screen_height = game.h * game.CELL_SIZE + PANEL_HEIGHT + SCREEN_PADDING * 2
+    screen = pygame.display.set_mode((screen_width, screen_height))
+    left_margin = (screen_width - game.l * game.CELL_SIZE) // 2
+    top_margin = (screen_height - game.h * game.CELL_SIZE - PANEL_HEIGHT) // 2
+
 def draw_grid():
     """Dessine la grille de jeu à l'écran."""
     for i in range(game.h):
@@ -273,6 +282,9 @@ def draw_grid():
                 screen.blit(text, text_rect)
             elif game.tableau[i][j] == "P":
                 pygame.draw.rect(screen, RED, rect)
+            elif game.tableau[i][j] == "B":
+                bomb_resized = resize_bomb_image(game.CELL_SIZE)
+                screen.blit(bomb_resized, rect.topleft)
 
 game = Tableau()
 screen_width = 1200  
@@ -303,11 +315,9 @@ while running:
         seconds = elapsed_time % 60
         game.final = f"{minutes:02}{seconds:02}"
         game.timer = f"{minutes:02}:{seconds:02}"
-
-    if not game.game_over and not game.victory:
         save_one = True
-        handle_difficulty_buttons(screen, font, game)
-        draw_grid()  # Draw the grid inside the main loop
+    handle_difficulty_buttons(screen, font, game)
+    draw_grid()  
 
     pygame.draw.rect(
         screen, BLACK, (0, screen_height - PANEL_HEIGHT, screen_width, PANEL_HEIGHT)
@@ -319,6 +329,7 @@ while running:
     screen.blit(flags_text, (SCREEN_PADDING + 20, screen_height - PANEL_HEIGHT + 70))
 
     if game.game_over:
+        draw_grid()  # Redessinez la grille pour montrer les bombes révélées
         game_over_text = alert_font.render("Game Over", True, RED)
         game_over_text_rect = game_over_text.get_rect(center=(screen_width // 2, screen_height // 3.5))
         screen.blit(game_over_text, game_over_text_rect)
