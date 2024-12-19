@@ -65,8 +65,10 @@ class Tableau:
             print("Choix invalide. Programme terminé.")
             exit()
         
+        self.preset_used = preset_tableau_resolve is not None
+
         # Si un tableau prédéfini est fourni, on l'utilise
-        if preset_tableau_resolve:
+        if self.preset_used:
             self.tableau_resolve = preset_tableau_resolve
             self.bomb = sum(row.count("B") for row in preset_tableau_resolve)
             self.h = len(preset_tableau_resolve)  # Update height
@@ -91,6 +93,9 @@ class Tableau:
             print(row)
 
     def reset_bomb_placement(self, first_click_x, first_click_y):
+        if self.preset_used:
+            return  # Do not place bombs if a preset tableau is used
+
         # Placer les bombes en évitant la zone autour du premier clique
         placed_bombs = 0
         while placed_bombs < self.bomb:
@@ -178,6 +183,22 @@ class Tableau:
         screen.blit(save_text, save_text_rect)
         return save_rect
 
+
+    def draw_save_button(self, screen, font, screen_width, screen_height):
+        save_width = 180
+        save_height = 50
+        save_rect = pygame.Rect(
+            screen_width // 2 - save_width // 2,
+            screen_height // 2 + 90,
+            save_width,
+            save_height,
+        )
+        pygame.draw.rect(screen, YELLOW, save_rect)
+        save_text = font.render("Save", True, BLACK)
+        save_text_rect = save_text.get_rect(center=save_rect.center)
+        screen.blit(save_text, save_text_rect)
+        return save_rect
+
 def draw_difficulty_buttons():
     score_button = pygame.Rect(50, 120, 100, 50)
     easy_button = pygame.Rect(50, 190, 100, 50)
@@ -205,22 +226,7 @@ def draw_difficulty_buttons():
 
     return easy_button, medium_button, hard_button, debug_button, score_button
 
-def load_preset_tableau():
-    """Charge un tableau prédéfini pour la partie."""
-    return [
-        ["x", "x", "x", "B", "x", "x", "x", "x", "x"],
-        ["x", "B", "x", "x", "x", "x", "x", "x", "x"],
-        ["x", "x", "x", "x", "x", "x", "x", "x", "x"],
-        ["B", "x", "x", "x", "B", "x", "x", "x", "x"],
-        ["x", "x", "B", "x", "x", "x", "x", "x", "x"],
-        ["x", "x", "B", "x", "x", "x", "x", "x", "x"],
-        ["x", "x", "B", "x", "x", "x", "x", "x", "x"],
-        ["x", "x", "B", "x", "x", "x", "x", "x", "x"],
-        ["x", "x", "B", "x", "x", "x", "x", "x", "x"]
-    ]
-
-def handle_difficulty_buttons(screen, font,  ):
-    global game, screen_width, screen_height, left_margin, top_margin
+def handle_difficulty_buttons(screen, font, game):
     easy_button, medium_button, hard_button, debug_button, score_button = draw_difficulty_buttons()
     mouse_x, mouse_y = pygame.mouse.get_pos()
 
@@ -235,19 +241,16 @@ def handle_difficulty_buttons(screen, font,  ):
             set_difficulty("3")
             game.reset()
         elif debug_button.collidepoint(mouse_x, mouse_y):
-            preset_tableau = load_preset_tableau()
-            game.reset(preset_tableau_resolve=preset_tableau)
-            print("Debug button clicked. Tableau reset with preset tableau.")
-            # Mise à jour des dimensions de l'écran et des marges après le reset
-            screen_width = 1200  
-            screen_height = game.h * game.CELL_SIZE + PANEL_HEIGHT + SCREEN_PADDING * 2
-            screen = pygame.display.set_mode((screen_width, screen_height))
-            left_margin = (screen_width - game.l * game.CELL_SIZE) // 2
-            top_margin = (screen_height - game.h * game.CELL_SIZE - PANEL_HEIGHT) // 2
-        
-        elif score_button.collidepoint(mouse_x, mouse_y):
-            display_leaderboard(screen, font, )
+            set_difficulty("0")
+            game.reset()
 
+        elif score_button.collidepoint(mouse_x, mouse_y):
+            display_leaderboard(screen, font, game)
+            pygame.time.wait(100)
+
+def play_replay(selected_save_map, game, screen, font):
+    game.reset(preset_tableau_resolve=selected_save_map)
+ 
 def draw_grid():
     """Dessine la grille de jeu à l'écran."""
     for i in range(game.h):
@@ -303,7 +306,7 @@ while running:
 
     if not game.game_over and not game.victory:
         save_one = True
-        handle_difficulty_buttons(screen, font)
+        handle_difficulty_buttons(screen, font, game)
         draw_grid()  # Draw the grid inside the main loop
 
     pygame.draw.rect(
