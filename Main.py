@@ -72,7 +72,8 @@ def get_difficulty():
 class Tableau:
     def __init__(self):
         self.reset()
-
+        
+    # Si aucun tableau prédéfini n'est fourni, générer un nouveau tableau
     def reset(self, preset_tableau_resolve=None):
         # Récupérer la difficulté actuelle et définir les dimensions du tableau
         d = get_difficulty()

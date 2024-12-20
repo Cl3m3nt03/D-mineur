@@ -2,7 +2,6 @@ import pygame
 import sys
 import mysql.connector
 
-# Pygame Configuration
 pygame.init()
 
 # Dimensions et couleurs
@@ -10,23 +9,24 @@ BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 YELLOW = (255, 255, 0)
 color_inactive = (255, 255, 255)
-color_active = (0, 255, 0)  # Vert foncé
+color_active = (0, 255, 0) 
 
-pseudo = ""  # Initialiser le pseudo comme une chaîne vide
+
+pseudo = ""  
 
 # Configuration de la zone de saisie du pseudo
-input_box = pygame.Rect(400, 100, 400, 50)  # Zone de texte pour le pseudo
-active = False  # Détermine si la zone de texte est active
+input_box = pygame.Rect(400, 100, 400, 50) 
+active = False  #
 
-# Font de texte
+
 font = pygame.font.Font(None, 36)
 
-# Fonction pour dessiner la zone de texte (pseudo)
+# Fonction pour dessiner la zone de texte 
 def draw_input_boxs(screen):
     color = color_active if active else color_inactive
     pygame.draw.rect(screen, color, input_box, 2)
 
-    # Afficher le texte saisi
+    # Afficher le texte 
     txt_surface = font.render(pseudo, True, color)
     screen.blit(txt_surface, (input_box.x + 5, input_box.y + 5))
 
@@ -38,7 +38,7 @@ def handle_text_inputs(event):
     else:
         pseudo += event.unicode  # Ajouter le caractère tapé à la chaîne
 
-# Fonction pour dessiner le bouton "Save"
+#  dessiner le bouton save et definir sa position et taille
 def draw_save_buttons(screen):
     save_width = 180
     save_height = 50
@@ -79,7 +79,7 @@ def get_pseudo_and_saves(screen, tableau_resolve, game_final):
                 running_input = False
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if input_box.collidepoint(event.pos):
-                    active = not active  # Toggle active state
+                    active = not active 
                 else:
                     active = False
                 # Vérifier si le bouton Save est cliqué
@@ -99,11 +99,9 @@ def get_pseudo_and_saves(screen, tableau_resolve, game_final):
 
         pygame.display.flip()
 
-# Fonction pour sauvegarder les données dans la base de données
-
+# Sauvegarder la carte dans la base de données
 def savemap(tableau_resolve, game_final):
     result = ""
-
     for y in range(len(tableau_resolve)):  
         compt = 0  
         for x in range(len(tableau_resolve[y])): 
@@ -114,17 +112,14 @@ def savemap(tableau_resolve, game_final):
                     result += f"{compt}x" if compt > 1 else "x"
                     compt = 0  
                 result += "B"  
-
-    
+        #Saut de ligne
         if compt > 0:
             result += f"{compt}x" if compt > 1 else "x"
 
         result += "v"  
 
- 
 
-
-    # Connexion à la base de données MySQL
+    # Connexion à la bdd
     mydb = mysql.connector.connect(
         host="localhost",
         user="root",
@@ -133,11 +128,10 @@ def savemap(tableau_resolve, game_final):
     )
     mycursor = mydb.cursor()
 
-    # Insertion dans la base de données
+    # Insertion de la carte le pseudo et le temps dans la table save
     string1 = f"INSERT INTO save (save_map, time,name) VALUES ('{result}', {game_final},'{pseudo}')"
     mycursor.execute(string1)
 
-    # Commit et fermeture
     mydb.commit() 
     mydb.close()
 
